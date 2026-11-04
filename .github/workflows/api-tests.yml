@@ -1,0 +1,67 @@
+name: api-tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    - cron: "0 9 * * *" # nightly
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  jest:
+    name: jest (security, authz, contract, business)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run test:coverage
+      - name: Coverage summary
+        if: always()
+        run: |
+          {
+            echo '### Coverage'
+            echo '```'
+            npx jest --coverage --coverageReporters=text-summary --silent 2>/dev/null | sed -n '/Coverage summary/,/====/p'
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coverage
+          path: coverage/lcov-report
+          retention-days: 7
+
+  newman:
+    name: postman collection (newman, real HTTP)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Start the API
+        run: |
+          npm start > server.log 2>&1 &
+          for i in $(seq 1 30); do curl -sf http://localhost:4000/health && exit 0; sleep 1; done
+          cat server.log; exit 1
+      - run: npm run newman
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: newman-junit
+          path: reports/newman.xml
+          retention-days: 7
