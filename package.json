@@ -1,0 +1,36 @@
+{
+  "name": "api-rbac-testing",
+  "version": "1.0.0",
+  "description": "API security and authorization testing lab: JWT/JWKS auth, permission matrix, tenant isolation (BOLA), mass assignment, impersonation, OpenAPI contract, property-based and Postman/Newman tests.",
+  "private": true,
+  "license": "MIT",
+  "author": "Murilo Filho",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "start": "tsx src/server.ts",
+    "typecheck": "tsc --noEmit",
+    "test": "jest",
+    "test:coverage": "jest --coverage",
+    "newman": "newman run postman/billing-api.postman_collection.json -e postman/local.postman_environment.json --reporters cli,junit --reporter-junit-export reports/newman.xml"
+  },
+  "dependencies": {
+    "express": "^4.22.3",
+    "jose": "^5.9.6"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.21",
+    "@types/jest": "^29.5.14",
+    "@types/node": "^22.10.0",
+    "@types/supertest": "^6.0.2",
+    "fast-check": "^4.10.2",
+    "jest": "^29.7.0",
+    "jest-openapi": "^0.14.2",
+    "newman": "^6.2.3",
+    "supertest": "^7.1.0",
+    "ts-jest": "^29.2.5",
+    "tsx": "^4.19.2",
+    "typescript": "^5.6.3"
+  }
+}
